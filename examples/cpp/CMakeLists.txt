@@ -27,6 +27,33 @@ macro(open3d_add_example EXAMPLE_CPP_NAME)
     list(APPEND EXAMPLE_TARGETS ${EXAMPLE_CPP_NAME})
 endmacro()
 
+
+macro(open3d_add_dll EXAMPLE_CPP_NAME)
+    add_library(${EXAMPLE_CPP_NAME} SHARED)
+
+    target_sources(${EXAMPLE_CPP_NAME} PRIVATE "${EXAMPLE_CPP_NAME}.cpp")
+    target_link_libraries(${EXAMPLE_CPP_NAME} PRIVATE Open3D::Open3D ${ARGN})
+    target_compile_definitions(${EXAMPLE_CPP_NAME} PRIVATE "-DO3D_ENABLE_DLL_EXPORTS")
+    # Don't use open3d_link_3rdparty_libraries(${EXAMPLE_CPP_NAME}).
+    # Unlike benchmarks, examples are intended as standalone apps that link
+    # the main Open3D library, while the benchmarks executable needs 3rd-party
+    # libraries since it measures the internal components of Open3D.
+    open3d_show_and_abort_on_warning(${EXAMPLE_CPP_NAME})
+    open3d_set_global_properties(${EXAMPLE_CPP_NAME})
+
+    set_target_properties(${EXAMPLE_CPP_NAME} PROPERTIES
+        FOLDER "examples/cpp/"
+        RUNTIME_OUTPUT_DIRECTORY "${EXAMPLE_BIN_DIR}"
+    )
+
+    if (NOT BUILD_EXAMPLES)
+        set_target_properties(${EXAMPLE_CPP_NAME} PROPERTIES
+            EXCLUDE_FROM_ALL TRUE
+        )
+    endif()
+
+endmacro()
+
 open3d_add_example(CameraPoseTrajectory)
 open3d_add_example(ColorMapOptimization)
 open3d_add_example(DepthCapture)
@@ -36,6 +63,7 @@ open3d_add_example(FileSystem)
 open3d_add_example(Flann)
 open3d_add_example(Image)
 open3d_add_example(IntegrateRGBD)
+open3d_add_dll(mesh_utils)
 open3d_add_example(ISSKeypoints)
 open3d_add_example(PlanarPatchDetection   ${OPENMP_TARGET})
 open3d_add_example(LineSet)

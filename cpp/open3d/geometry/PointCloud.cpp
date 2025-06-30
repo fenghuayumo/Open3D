@@ -361,10 +361,10 @@ std::shared_ptr<PointCloud> PointCloud::VoxelDownSample(
             Eigen::Vector3d(voxel_size, voxel_size, voxel_size);
     Eigen::Vector3d voxel_min_bound = GetMinBound() - voxel_size3 * 0.5;
     Eigen::Vector3d voxel_max_bound = GetMaxBound() + voxel_size3 * 0.5;
-    if (voxel_size * std::numeric_limits<int>::max() <
-        (voxel_max_bound - voxel_min_bound).maxCoeff()) {
-        utility::LogError("voxel_size is too small.");
-    }
+    //if (voxel_size * std::numeric_limits<int>::max() <
+    //    (voxel_max_bound - voxel_min_bound).maxCoeff()) {
+    //    utility::LogError("voxel_size is too small.");
+    //}
     std::unordered_map<Eigen::Vector3i, AccumulatedPoint,
                        utility::hash_eigen<Eigen::Vector3i>>
             voxelindex_to_accpoint;
