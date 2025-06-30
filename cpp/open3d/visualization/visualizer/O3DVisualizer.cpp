@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 // -                        Open3D: www.open3d.org                            -
 // ----------------------------------------------------------------------------
-// Copyright (c) 2018-2023 www.open3d.org
+// Copyright (c) 2018-2024 www.open3d.org
 // SPDX-License-Identifier: MIT
 // ----------------------------------------------------------------------------
 
@@ -60,6 +60,7 @@ namespace visualizer {
 namespace {
 static const std::string kShaderLit = "defaultLit";
 static const std::string kShaderUnlit = "defaultUnlit";
+static const std::string kShaderGaussianSplat = "gaussianSplat";
 static const std::string kShaderUnlitLines = "unlitLine";
 
 static const std::string kDefaultIBL = "default";
@@ -860,6 +861,7 @@ Ctrl-alt-click to polygon select)";
         } else {  // branch only applies to geometries
             bool has_colors = false;
             bool has_normals = false;
+            bool is_gaussian_splat = false;
 
             auto cloud = std::dynamic_pointer_cast<geometry::PointCloud>(geom);
             auto lines = std::dynamic_pointer_cast<geometry::LineSet>(geom);
@@ -886,6 +888,7 @@ Ctrl-alt-click to polygon select)";
                 has_colors = !cloud->colors_.empty();
                 has_normals = !cloud->normals_.empty();
             } else if (t_cloud) {
+                if (t_cloud->IsGaussianSplat()) is_gaussian_splat = true;
                 has_colors = t_cloud->HasPointColors();
                 has_normals = t_cloud->HasPointNormals();
             } else if (lines) {
@@ -931,6 +934,10 @@ Ctrl-alt-click to polygon select)";
                 mat.base_color = {1.0f, 1.0f, 1.0f, 1.0f};
                 mat.shader = kShaderLit;
                 is_default_color = false;
+            }
+            if (is_gaussian_splat) {
+                mat.shader = kShaderGaussianSplat;
+                mat.sh_degree = t_cloud->GaussianSplatGetSHOrder();
             }
             mat.point_size = ConvertToScaledPixels(ui_state_.point_size);
 
@@ -1706,6 +1713,18 @@ Ctrl-alt-click to polygon select)";
         }
     }
 
+    void SetPanelOpen(const std::string &name, bool open) {
+        if (name == settings.mouse_panel->GetText()) {
+            settings.mouse_panel->SetIsOpen(open);
+        } else if (name == settings.scene_panel->GetText()) {
+            settings.scene_panel->SetIsOpen(open);
+        } else if (name == settings.light_panel->GetText()) {
+            settings.light_panel->SetIsOpen(open);
+        } else if (name == settings.geometries_panel->GetText()) {
+            settings.geometries_panel->SetIsOpen(open);
+        }
+    }
+
     void SetPicking() {
         if (selections_->GetNumberOfSets() == 0) {
             NewSelectionSet();
@@ -2444,6 +2463,10 @@ void O3DVisualizer::SetLineWidth(int line_width) {
 
 void O3DVisualizer::SetMouseMode(SceneWidget::Controls mode) {
     impl_->SetMouseMode(mode);
+}
+
+void O3DVisualizer::SetPanelOpen(const std::string &name, bool open) {
+    impl_->SetPanelOpen(name, open);
 }
 
 void O3DVisualizer::EnableGroup(const std::string &group, bool enable) {

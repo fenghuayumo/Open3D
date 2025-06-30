@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 // -                        Open3D: www.open3d.org                            -
 // ----------------------------------------------------------------------------
-// Copyright (c) 2018-2023 www.open3d.org
+// Copyright (c) 2018-2024 www.open3d.org
 // SPDX-License-Identifier: MIT
 // ----------------------------------------------------------------------------
 
@@ -102,7 +102,8 @@ std::unordered_map<std::string, MaterialHandle> shader_mappings = {
          ResourceManager::kDefaultUnlitPolygonOffsetShader},
         {"unlitBackground", ResourceManager::kDefaultUnlitBackgroundShader},
         {"infiniteGroundPlane", ResourceManager::kInfinitePlaneShader},
-        {"unlitLine", ResourceManager::kDefaultLineShader}};
+        {"unlitLine", ResourceManager::kDefaultLineShader},
+        {"gaussianSplat", ResourceManager::kGaussianSplatShader}};
 
 MaterialHandle kColorOnlyMesh = ResourceManager::kDefaultUnlit;
 MaterialHandle kPlainMesh = ResourceManager::kDefaultLit;
@@ -590,7 +591,7 @@ void FilamentScene::UpdateGeometry(const std::string& object_name,
             const size_t color_array_size = n_vertices * 3 * sizeof(float);
             if (pcloud_is_gpu) {
                 auto color_data = static_cast<float*>(malloc(color_array_size));
-                memcpy(color_data, cpu_pcloud.GetPointPositions().GetDataPtr(),
+                memcpy(color_data, cpu_pcloud.GetPointColors().GetDataPtr(),
                        color_array_size);
                 filament::VertexBuffer::BufferDescriptor color_descriptor(
                         color_data, color_array_size, DeallocateBuffer);
@@ -843,6 +844,32 @@ void FilamentScene::UpdateDefaultLit(GeometryMaterialInstance& geom_mi) {
             //             rendering::TextureSamplerParameters::Pretty())
             // .SetTexture("anisotropyMap", maps.anisotropy_map,
             //             rendering::TextureSamplerParameters::Pretty())
+            .Finish();
+}
+
+void FilamentScene::UpdateGaussianSplat(GeometryMaterialInstance& geom_mi) {
+    auto& material = geom_mi.properties;
+    auto& maps = geom_mi.maps;
+
+    renderer_.ModifyMaterial(geom_mi.mat_instance)
+            .SetColor("baseColor", material.base_color, false)
+            .SetParameter("pointSize", material.point_size)
+            .SetParameter("baseRoughness", material.base_roughness)
+            .SetParameter("baseMetallic", material.base_metallic)
+            .SetParameter("reflectance", material.base_reflectance)
+            .SetParameter("clearCoat", material.base_clearcoat)
+            .SetParameter("clearCoatRoughness",
+                          material.base_clearcoat_roughness)
+            .SetParameter("anisotropy", material.base_anisotropy)
+            .SetParameter("shDegree", material.sh_degree)
+            .SetTexture("albedo", maps.albedo_map,
+                        rendering::TextureSamplerParameters::Pretty())
+            .SetTexture("normalMap", maps.normal_map,
+                        rendering::TextureSamplerParameters::Pretty())
+            .SetTexture("ao_rough_metalMap", maps.ao_rough_metal_map,
+                        rendering::TextureSamplerParameters::Pretty())
+            .SetTexture("reflectanceMap", maps.reflectance_map,
+                        rendering::TextureSamplerParameters::Pretty())
             .Finish();
 }
 
@@ -1131,6 +1158,8 @@ void FilamentScene::UpdateMaterialProperties(RenderableGeometry& geom) {
         UpdateLineShader(geom.mat);
     } else if (props.shader == "unlitPolygonOffset") {
         UpdateUnlitPolygonOffsetShader(geom.mat);
+    } else if (props.shader == "gaussianSplat") {
+        UpdateGaussianSplat(geom.mat);
     } else {
         utility::LogWarning("'{}' is not a valid shader", props.shader);
     }

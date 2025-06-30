@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # -                        Open3D: www.open3d.org                            -
 # ----------------------------------------------------------------------------
-# Copyright (c) 2018-2023 www.open3d.org
+# Copyright (c) 2018-2024 www.open3d.org
 # SPDX-License-Identifier: MIT
 # ----------------------------------------------------------------------------
 
@@ -40,15 +40,7 @@ if sys.version_info < (3, 6):
 
 # Check and import yapf
 # > not found: throw exception
-# > version mismatch: throw exception
-try:
-    import yapf
-except ImportError:
-    raise ImportError(
-        "yapf not found. Install with `pip install yapf==0.30.0`.")
-if yapf.__version__ != "0.30.0":
-    raise RuntimeError(
-        "yapf 0.30.0 required. Install with `pip install yapf==0.30.0`.")
+import yapf
 
 # Check and import nbformat
 # > not found: throw exception
@@ -64,7 +56,7 @@ class CppFormatter:
     standard_header = """// ----------------------------------------------------------------------------
 // -                        Open3D: www.open3d.org                            -
 // ----------------------------------------------------------------------------
-// Copyright (c) 2018-2023 www.open3d.org
+// Copyright (c) 2018-2024 www.open3d.org
 // SPDX-License-Identifier: MIT
 // ----------------------------------------------------------------------------
 """
@@ -78,8 +70,13 @@ class CppFormatter:
         """
         Returns (true, true) if (style, header) is valid.
         """
-        with open(file_path, 'r', encoding='utf-8') as f:
-            is_valid_header = f.read().startswith(CppFormatter.standard_header)
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                is_valid_header = (f.read(len(CppFormatter.standard_header)) ==
+                                   CppFormatter.standard_header)
+        except Exception as exp:
+            print(f"Error reading file header {file_path}: {exp}")
+            is_valid_header = False
 
         cmd = [
             clang_format_bin,
@@ -141,7 +138,7 @@ class PythonFormatter:
     standard_header = """# ----------------------------------------------------------------------------
 # -                        Open3D: www.open3d.org                            -
 # ----------------------------------------------------------------------------
-# Copyright (c) 2018-2023 www.open3d.org
+# Copyright (c) 2018-2024 www.open3d.org
 # SPDX-License-Identifier: MIT
 # ----------------------------------------------------------------------------
 """
@@ -156,10 +153,14 @@ class PythonFormatter:
         Returns (true, true) if (style, header) is valid.
         """
 
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-            is_valid_header = (len(content) == 0 or content.startswith(
-                PythonFormatter.standard_header))
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                is_valid_header = (len(content) == 0 or content.startswith(
+                    PythonFormatter.standard_header))
+        except Exception as exp:
+            print(f"Error reading file header {file_path}: {exp}")
+            is_valid_header = False
 
         _, _, changed = yapf.yapflib.yapf_api.FormatFile(
             file_path, style_config=style_config, in_place=False)
@@ -296,7 +297,9 @@ def _glob_files(directories, extensions):
         for extension in extensions:
             extension_regex = "*." + extension
             file_paths.extend(directory.rglob(extension_regex))
-    file_paths = [str(file_path) for file_path in file_paths]
+    file_paths = [
+        str(file_path) for file_path in file_paths if file_path.name[0] != '.'
+    ]
     file_paths = sorted(list(set(file_paths)))
     return file_paths
 
@@ -306,7 +309,7 @@ def _find_clang_format():
     Returns (bin_path, version) to clang-format version 10, throws exception
     otherwise.
     """
-    required_clang_format_major = 10
+    required_clang_format_major = 18
 
     def parse_version(bin_path):
         """
@@ -314,7 +317,7 @@ def _find_clang_format():
         """
         version_str = subprocess.check_output([bin_path, "--version"
                                               ]).decode("utf-8").strip()
-        match = re.match("^clang-format version ([0-9.]*).*$", version_str)
+        match = re.match("^.*clang-format version ([0-9.]*).*$", version_str)
         return match.group(1) if match else None
 
     def parse_version_major(bin_path):

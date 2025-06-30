@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 # -                        Open3D: www.open3d.org                            -
 # ----------------------------------------------------------------------------
-# Copyright (c) 2018-2023 www.open3d.org
+# Copyright (c) 2018-2024 www.open3d.org
 # SPDX-License-Identifier: MIT
 # ----------------------------------------------------------------------------
 
@@ -39,7 +39,7 @@ elif platform.system() == "Windows":
     hanzi = "c:/windows/fonts/msyh.ttc"  # YaHei UI
     chess = "c:/windows/fonts/seguisym.ttf"  # Segoe UI Symbol
 else:
-    # Assumes Ubuntu 18.04
+    # Assumes Ubuntu 20.04
     serif = "DejaVuSerif"
     hanzi = "NotoSansCJK"
     chess = "/usr/share/fonts/truetype/freefont/FreeSerif.ttf"
@@ -204,7 +204,8 @@ class ExampleWindow:
 
         # Add a list of items
         lv = gui.ListView()
-        lv.set_items(["Ground", "Trees", "Buildings" "Cars", "People"])
+        lv.set_items(["Ground", "Trees", "Buildings"
+                      "Cars", "People"])
         lv.selected_index = lv.selected_index + 2  # initially is -1, so now 1
         lv.set_on_selection_changed(self._on_list)
         collapse.add_child(lv)

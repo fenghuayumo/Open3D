@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 // -                        Open3D: www.open3d.org                            -
 // ----------------------------------------------------------------------------
-// Copyright (c) 2018-2023 www.open3d.org
+// Copyright (c) 2018-2024 www.open3d.org
 // SPDX-License-Identifier: MIT
 // ----------------------------------------------------------------------------
 
@@ -17,32 +17,31 @@ namespace open3d {
 namespace t {
 namespace geometry {
 
-void pybind_boundingvolume(py::module& m) {
+void pybind_boundingvolume_declarations(py::module& m) {
     py::class_<AxisAlignedBoundingBox, PyGeometry<AxisAlignedBoundingBox>,
                std::shared_ptr<AxisAlignedBoundingBox>, Geometry,
                DrawableGeometry>
             aabb(m, "AxisAlignedBoundingBox",
-                 R"(A bounding box that is aligned along the coordinate axes
-and defined by the min_bound and max_bound."
-- (min_bound, max_bound): Lower and upper bounds of the bounding box for all
-axes.
-    - Usage
-        - AxisAlignedBoundingBox::GetMinBound()
-        - AxisAlignedBoundingBox::SetMinBound(const core::Tensor &min_bound)
-        - AxisAlignedBoundingBox::GetMaxBound()
-        - AxisAlignedBoundingBox::SetMaxBound(const core::Tensor &max_bound)
-    - Value tensor must have shape {3,}.
-    - Value tensor must have the same data type and device.
-    - Value tensor can only be float32 (default) or float64.
-    - The device of the tensor determines the device of the box.
+                 R"(A bounding box that is aligned along the coordinate axes and
+has the properties:
 
-- color: Color of the bounding box.
-    - Usage
-        - AxisAlignedBoundingBox::GetColor()
-        - AxisAlignedBoundingBox::SetColor(const core::Tensor &color)
-    - Value tensor must have shape {3,}.
-    - Value tensor can only be float32 (default) or float64.
-    - Value tensor can only be range [0.0, 1.0].)");
+- (``min_bound``, ``max_bound``): Lower and upper bounds of the bounding box for all axes. These are tensors with shape (3,) and a common data type and device. The data type can only be ``open3d.core.float32`` (default) or ``open3d.core.float64``. The device of the tensor determines the device of the box.
+- ``color``: Color of the bounding box is a tensor with shape (3,) and a data type ``open3d.core.float32`` (default) or ``open3d.core.float64``. Values can only be in the range [0.0, 1.0].)");
+    py::class_<OrientedBoundingBox, PyGeometry<OrientedBoundingBox>,
+               std::shared_ptr<OrientedBoundingBox>, Geometry, DrawableGeometry>
+            obb(m, "OrientedBoundingBox",
+                R"(A bounding box oriented along an arbitrary frame of reference
+with the properties:
+
+- (``center``, ``rotation``, ``extent``): The oriented bounding box is defined by its center position (shape (3,)), rotation maxtrix (shape (3,3)) and extent (shape (3,)).  Each of these tensors must have the same data type and device. The data type can only be ``open3d.core.float32`` (default) or ``open3d.core.float64``. The device of the tensor determines the device of the box.
+- ``color``: Color of the bounding box is a tensor with shape (3,) and a data type ``open3d.core.float32`` (default) or ``open3d.core.float64``. Values can only be in the range [0.0, 1.0].)");
+}
+void pybind_boundingvolume_definitions(py::module& m) {
+    auto aabb = static_cast<py::class_<AxisAlignedBoundingBox,
+                                       PyGeometry<AxisAlignedBoundingBox>,
+                                       std::shared_ptr<AxisAlignedBoundingBox>,
+                                       Geometry, DrawableGeometry>>(
+            m.attr("AxisAlignedBoundingBox"));
     aabb.def(py::init<const core::Device&>(),
              "device"_a = core::Device("CPU:0"),
              "Construct an empty axis-aligned box on the provided "
@@ -50,7 +49,7 @@ axes.
     aabb.def(py::init<const core::Tensor&, const core::Tensor&>(),
              "min_bound"_a, "max_bound"_a,
              R"(Construct an axis-aligned box from min/max bound.
-The axis-aligned box will be created on the device of the given bound 
+The axis-aligned box will be created on the device of the given bound
 tensor, which must be on the same device and have the same data type.)");
     docstring::ClassMethodDocInject(
             m, "AxisAlignedBoundingBox", "__init__",
@@ -125,7 +124,7 @@ translation is applied to make the box's center at the given translation.)",
     aabb.def("scale", &AxisAlignedBoundingBox::Scale, R"(Scale the axis-aligned
 box.
 If \f$mi\f$ is the min_bound and \f$ma\f$ is the max_bound of the axis aligned
-bounding box, and \f$s\f$ and \f$c\f$ are the provided scaling factor and 
+bounding box, and \f$s\f$ and \f$c\f$ are the provided scaling factor and
 center respectively, then the new min_bound and max_bound are given by
 \f$mi = c + s (mi - c)\f$ and \f$ma = c + s (ma - c)\f$.
 The scaling center will be the box center if it is not specified.)",
@@ -198,38 +197,17 @@ The scaling center will be the box center if it is not specified.)",
             {{"points",
               "A list of points with data type of float32 or float64 (N x 3 "
               "tensor)."}});
-
-    py::class_<OrientedBoundingBox, PyGeometry<OrientedBoundingBox>,
-               std::shared_ptr<OrientedBoundingBox>, Geometry, DrawableGeometry>
-            obb(m, "OrientedBoundingBox",
-                R"(A bounding box oriented along an arbitrary frame of reference.
-- (center, rotation, extent): The oriented bounding box is defined by its
-center position, rotation maxtrix and extent.
-    - Usage
-        - OrientedBoundingBox::GetCenter()
-        - OrientedBoundingBox::SetCenter(const core::Tensor &center)
-        - OrientedBoundingBox::GetRotation()
-        - OrientedBoundingBox::SetRotation(const core::Tensor &rotation)
-    - Value tensor of center and extent must have shape {3,}.
-    - Value tensor of rotation must have shape {3, 3}.
-    - Value tensor must have the same data type and device.
-    - Value tensor can only be float32 (default) or float64.
-    - The device of the tensor determines the device of the box.
-
-- color: Color of the bounding box.
-    - Usage
-        - OrientedBoundingBox::GetColor()
-        - OrientedBoundingBox::SetColor(const core::Tensor &color)
-    - Value tensor must have shape {3,}.
-    - Value tensor can only be float32 (default) or float64.
-    - Value tensor can only be range [0.0, 1.0].)");
+    auto obb = static_cast<py::class_<
+            OrientedBoundingBox, PyGeometry<OrientedBoundingBox>,
+            std::shared_ptr<OrientedBoundingBox>, Geometry, DrawableGeometry>>(
+            m.attr("OrientedBoundingBox"));
     obb.def(py::init<const core::Device&>(), "device"_a = core::Device("CPU:0"),
             "Construct an empty OrientedBoundingBox on the provided device.");
     obb.def(py::init<const core::Tensor&, const core::Tensor&,
                      const core::Tensor&>(),
             "center"_a, "rotation"_a, "extent"_a,
-            R"(Construct an OrientedBoundingBox from center, rotation and extent. 
-The OrientedBoundingBox will be created on the device of the given tensors, which 
+            R"(Construct an OrientedBoundingBox from center, rotation and extent.
+The OrientedBoundingBox will be created on the device of the given tensors, which
 must be on the same device and have the same data type.)");
     docstring::ClassMethodDocInject(
             m, "OrientedBoundingBox", "__init__",
@@ -295,7 +273,7 @@ must be on the same device and have the same data type.)");
 
     obb.def("translate", &OrientedBoundingBox::Translate, R"(Translate the
 oriented box by the given translation. If relative is true, the translation is
-added to the center of the box. If false, the center will be assigned to the 
+added to the center of the box. If false, the center will be assigned to the
 translation.)",
             "translation"_a, "relative"_a = true);
     obb.def("rotate", &OrientedBoundingBox::Rotate,
@@ -309,7 +287,7 @@ The rotation center will be the box center if it is not specified.)",
     obb.def("scale", &OrientedBoundingBox::Scale, R"(Scale the axis-aligned
 box.
 If \f$mi\f$ is the min_bound and \f$ma\f$ is the max_bound of the axis aligned
-bounding box, and \f$s\f$ and \f$c\f$ are the provided scaling factor and 
+bounding box, and \f$s\f$ and \f$c\f$ are the provided scaling factor and
 center respectively, then the new min_bound and max_bound are given by
 \f$mi = c + s (mi - c)\f$ and \f$ma = c + s (ma - c)\f$.
 The scaling center will be the box center if it is not specified.)",
@@ -338,13 +316,70 @@ The scaling center will be the box center if it is not specified.)",
             "create_from_axis_aligned_bounding_box",
             &OrientedBoundingBox::CreateFromAxisAlignedBoundingBox, "aabb"_a,
             "Create an OrientedBoundingBox from a legacy Open3D oriented box.");
+
     obb.def_static("create_from_points", &OrientedBoundingBox::CreateFromPoints,
-                   R"(Creates an oriented bounding box using a PCA.
-Note that this is only an approximation to the minimum oriented bounding box
-that could be computed for example with O'Rourke's algorithm 
-(cf. http://cs.smith.edu/~jorourke/Papers/MinVolBox.pdf, https://www.geometrictools.com/Documentation/MinimumVolumeBox.pdf)
-This is a wrapper for a CPU implementation.)",
-                   "points"_a, "robust"_a = false);
+                   R"(Creates an oriented bounding box with various algorithms.
+
+Args:
+    points (open3d.core.Tensor): A list of points with data type of float32 or 
+        float64 (N x 3 tensor, where N must be larger than 3).
+    robust (bool): If set to true uses a more robust method which works in 
+        degenerate cases but introduces noise to the points coordinates.
+    method (open3d.t.geometry.OrientedBoundingBox.Method): This is one of 
+        ``PCA``, ``MINIMAL_APPROX``, ``MINIMAL_JYLANKI``. 
+
+        - ``PCA`` computes an oriented bounding box using the principal component
+          analysis. The output is in most cases not a minimal oriented bounding box.
+          This algorithm is the fastest.
+        - ``MINIMAL_APPROX`` is a fast approximation algorithm. The algorithm 
+          makes use of the fact that at least one edge of the convex hull must be
+          collinear with an edge of the minimum bounding box: for each triangle in
+          the convex hull, calculate the minimal axis aligned box in the frame of
+          that triangle. At the end, return the box with the smallest volume.
+          This algorithm is a good choice if speed and accuracy is important.
+        - ``MINIMAL_JYLANKI`` computes an oriented bounding box using a more 
+          accurate but slower algorithm. This algorithm is inspired by the article 
+          "An Exact Algorithm for Finding Minimum Oriented Bounding Boxes" 
+          written by Jukka Jylänki. The original implementation can be found at 
+          the following address:
+          https://github.com/juj/MathGeoLib/blob/55053da5e3e55a83043af7324944407b174c3724/src/Geometry/OBB.cpp#L987
+          This algorithm is the best choice if accuracy is most important.
+
+Returns:
+    The oriented bounding box.
+    
+    For the ``PCA`` method the bounding box is oriented such that the axes are 
+    ordered with respect to the principal components.
+
+    For the ``MINIMAL_JYLANKI`` method the bounding box is oriented to be closest 
+    to the identity rotation matrix.
+
+Example:
+    This example shows a comparison of all algorithms::
+
+        import open3d as o3d
+
+        bunny = o3d.data.BunnyMesh()
+        mesh = o3d.t.io.read_triangle_mesh(bunny.path)
+
+        methods = [
+            o3d.t.geometry.PCA,
+            o3d.t.geometry.MINIMAL_APPROX,
+            o3d.t.geometry.MINIMAL_JYLANKI,
+        ]
+
+        obbs = []
+        for method, color in zip(methods, [(1,0,0),(0,1,0),(0,0,1)]):
+            obb = o3d.t.geometry.OrientedBoundingBox.create_from_points(
+                mesh.vertex.positions, method=method)
+            obb.set_color(color)
+            obbs.append(obb)
+            print(f"Volume is {obb.volume()} with {method.name}")
+            
+        o3d.visualization.draw([obb.to_legacy() for obb in obbs] + [mesh])
+)",
+                   "points"_a, "robust"_a = false,
+                   "method"_a = MethodOBBCreate::MINIMAL_APPROX);
 
     docstring::ClassMethodDocInject(
             m, "OrientedBoundingBox", "set_center",
