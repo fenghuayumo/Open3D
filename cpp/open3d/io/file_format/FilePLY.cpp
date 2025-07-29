@@ -618,7 +618,7 @@ bool WriteTriangleMeshToPLY(const std::string &filename,
     write_vertex_normals = write_vertex_normals && mesh.HasVertexNormals();
     write_vertex_colors = write_vertex_colors && mesh.HasVertexColors();
 
-    ply_add_comment(ply_file, "Created by Open3D");
+    ply_add_comment(ply_file, "Created by dvsplat");
     ply_add_element(ply_file, "vertex",
                     static_cast<long>(mesh.vertices_.size()));
     ply_add_property(ply_file, "x", PLY_DOUBLE, PLY_DOUBLE, PLY_DOUBLE);

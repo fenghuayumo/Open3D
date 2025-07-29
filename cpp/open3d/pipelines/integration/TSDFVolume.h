@@ -68,7 +68,7 @@ public:
 
     /// \brief Function to extract a triangle mesh, using the marching cubes
     /// algorithm. (https://en.wikipedia.org/wiki/Marching_cubes)
-    virtual std::shared_ptr<geometry::TriangleMesh> ExtractTriangleMesh() = 0;
+    virtual std::shared_ptr<geometry::TriangleMesh> ExtractTriangleMesh(float& progress) = 0;
 
 public:
     /// Length of the voxel in meters.

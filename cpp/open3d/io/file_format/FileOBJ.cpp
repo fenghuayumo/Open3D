@@ -228,7 +228,7 @@ bool WriteTriangleMeshToOBJ(const std::string& filename,
         utility::LogWarning("Write OBJ can not include triangle normals.");
     }
 
-    file << "# Created by Open3D " << std::endl;
+    file << "# Created by dvsplat " << std::endl;
     file << "# object name: " << object_name << std::endl;
     file << "# number of vertices: " << mesh.vertices_.size() << std::endl;
     file << "# number of triangles: " << mesh.triangles_.size() << std::endl;
@@ -348,7 +348,7 @@ bool WriteTriangleMeshToOBJ(const std::string& filename,
                     "Write OBJ successful, but failed to write material file.");
             return true;
         }
-        mtl_file << "# Created by Open3D " << std::endl;
+        mtl_file << "# Created by dvsplat " << std::endl;
         mtl_file << "# object name: " << object_name << std::endl;
 
         // write textures (if existing)

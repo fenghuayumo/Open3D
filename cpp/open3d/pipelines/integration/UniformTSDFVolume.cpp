@@ -139,7 +139,7 @@ std::shared_ptr<geometry::PointCloud> UniformTSDFVolume::ExtractPointCloud() {
 }
 
 std::shared_ptr<geometry::TriangleMesh>
-UniformTSDFVolume::ExtractTriangleMesh() {
+UniformTSDFVolume::ExtractTriangleMesh(float& progress) {
     // implementation of marching cubes, based on
     // http://paulbourke.net/geometry/polygonise/
     auto mesh = std::make_shared<geometry::TriangleMesh>();

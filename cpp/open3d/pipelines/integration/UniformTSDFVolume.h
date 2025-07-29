@@ -51,7 +51,7 @@ public:
                    const camera::PinholeCameraIntrinsic &intrinsic,
                    const Eigen::Matrix4d &extrinsic) override;
     std::shared_ptr<geometry::PointCloud> ExtractPointCloud() override;
-    std::shared_ptr<geometry::TriangleMesh> ExtractTriangleMesh() override;
+    std::shared_ptr<geometry::TriangleMesh> ExtractTriangleMesh(float& progress) override;
 
     /// Debug function to extract the voxel data into a VoxelGrid
     std::shared_ptr<geometry::PointCloud> ExtractVoxelPointCloud() const;

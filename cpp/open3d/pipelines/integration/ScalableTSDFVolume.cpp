@@ -200,7 +200,7 @@ std::shared_ptr<geometry::PointCloud> ScalableTSDFVolume::ExtractPointCloud() {
 }
 
 std::shared_ptr<geometry::TriangleMesh>
-ScalableTSDFVolume::ExtractTriangleMesh() {
+ScalableTSDFVolume::ExtractTriangleMesh(float& progress) {
     // implementation of marching cubes, based on
     // http://paulbourke.net/geometry/polygonise/
     auto mesh = std::make_shared<geometry::TriangleMesh>();
@@ -341,6 +341,8 @@ ScalableTSDFVolume::ExtractTriangleMesh() {
                                     edge_to_index[tri_table[cube_index]
                                                            [i + 1]]));
                         }
+                        progress = 0.5f * (x * volume0.resolution_ * volume0.resolution_ + y * volume0.resolution_ + z) / (double)(volume0.resolution_ * volume0.resolution_ * volume0.resolution_);
+                        //progress *= 0.5;
                     }
                 }
             }

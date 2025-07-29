@@ -38,12 +38,18 @@ namespace o3d
 			const std::vector<float*>& depth,
 			float voxel_length = 1/256.0f,
             int target_triangles = 200000,
+            int target_tex_resolution = 512,
 			float sdf_trunc = 0.05f,
             float depth_trunc = 1.0f,
 			int threshold_ntri = 100000
 			);
+
+		//std::vector<float> filter_outlier_points(
+  //                      const std::vector<float>& points, int nb_points = 10,
+		//				float radius = 0.1f);
+                float get_progress() { return progress_ ;}
 	protected:
-	
+		float progress_ = 0.0f;
 	};
 
 	struct Vec3 {
@@ -88,4 +94,10 @@ namespace o3d
 		const std::vector<double>&	vertices,
 		const std::vector<uint32_t>&	indices
 	);
-}
+
+	O3D_API double compute_avg_spacing(const double* points,
+									int numpts,
+                                    int nb_points = 10,
+                                    float radius = 0.1,
+                                    int k = 5);
+        }
