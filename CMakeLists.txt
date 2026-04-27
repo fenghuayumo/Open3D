@@ -497,7 +497,9 @@ if(WIN32)
         # verbose with inline members
         #
         # See: https://github.com/tensorflow/tensorflow/pull/10962
-        add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/bigobj;/Ob2>")
+        # /utf-8: satisfies fmt (and other deps) when UTF-8 source/exec charset is required,
+        # e.g. external headers pulled in via MSVC/vcpkg include hooks.
+        add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/bigobj;/Ob2;/utf-8>")
     endif()
     if (STATIC_WINDOWS_RUNTIME)
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

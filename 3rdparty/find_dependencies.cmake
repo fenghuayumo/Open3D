@@ -948,6 +948,9 @@ if(NOT USE_SYSTEM_PNG)
         DEPENDS      ext_zlib
     )
     add_dependencies(ext_assimp ext_zlib)
+    # Ensure Assimp's configure-time FIND_PACKAGE(ZLIB) runs after zlib is installed
+    # (add_dependencies alone does not order ExternalProject steps under MSVC).
+    ExternalProject_Add_StepDependencies(ext_assimp configure ext_zlib)
 
     include(${Open3D_3RDPARTY_DIR}/libpng/libpng.cmake)
     open3d_import_3rdparty_library(3rdparty_png

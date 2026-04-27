@@ -145,6 +145,10 @@ struct WritePointCloudOption {
     /// completion (0.-100.) return true indicates to continue loading, false
     /// means to try to stop loading and cleanup
     std::function<bool(double)> update_progress;
+    /// If true, the legacy geometry::PointCloud PLY writer stores vertex
+    /// positions and normals (when present) as float32. Other writers ignore
+    /// this flag.
+    bool write_vertex_float = false;
 };
 
 /// The general entrance for writing a PointCloud to a file

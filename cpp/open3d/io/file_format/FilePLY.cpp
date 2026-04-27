@@ -453,16 +453,18 @@ bool WritePointCloudToPLY(const std::string &filename,
                             filename);
         return false;
     }
-    ply_add_comment(ply_file, "Created by Open3D");
+    // ply_add_comment(ply_file, "Created by Open3D");
     ply_add_element(ply_file, "vertex",
                     static_cast<long>(pointcloud.points_.size()));
-    ply_add_property(ply_file, "x", PLY_DOUBLE, PLY_DOUBLE, PLY_DOUBLE);
-    ply_add_property(ply_file, "y", PLY_DOUBLE, PLY_DOUBLE, PLY_DOUBLE);
-    ply_add_property(ply_file, "z", PLY_DOUBLE, PLY_DOUBLE, PLY_DOUBLE);
+    const e_ply_type coord_type =
+            params.write_vertex_float ? PLY_FLOAT : PLY_DOUBLE;
+    ply_add_property(ply_file, "x", coord_type, coord_type, coord_type);
+    ply_add_property(ply_file, "y", coord_type, coord_type, coord_type);
+    ply_add_property(ply_file, "z", coord_type, coord_type, coord_type);
     if (pointcloud.HasNormals()) {
-        ply_add_property(ply_file, "nx", PLY_DOUBLE, PLY_DOUBLE, PLY_DOUBLE);
-        ply_add_property(ply_file, "ny", PLY_DOUBLE, PLY_DOUBLE, PLY_DOUBLE);
-        ply_add_property(ply_file, "nz", PLY_DOUBLE, PLY_DOUBLE, PLY_DOUBLE);
+        ply_add_property(ply_file, "nx", coord_type, coord_type, coord_type);
+        ply_add_property(ply_file, "ny", coord_type, coord_type, coord_type);
+        ply_add_property(ply_file, "nz", coord_type, coord_type, coord_type);
     }
     if (pointcloud.HasColors()) {
         ply_add_property(ply_file, "red", PLY_UCHAR, PLY_UCHAR, PLY_UCHAR);

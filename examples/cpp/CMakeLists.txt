@@ -28,30 +28,50 @@ macro(open3d_add_example EXAMPLE_CPP_NAME)
 endmacro()
 
 
-macro(open3d_add_dll EXAMPLE_CPP_NAME)
-    add_library(${EXAMPLE_CPP_NAME} SHARED)
+# Shared mesh_utils DLL: links the monolithic Open3D static library (default
+# BUILD_SHARED_LIBS=OFF) into one binary so downstream apps only link
+# mesh_utils (+ system CRT). On MSVC, /force:multiple matches pybind.
+macro(open3d_add_mesh_utils_dll)
+    set(_m mesh_utils)
+    add_library(${_m} SHARED)
+    target_sources(${_m} PRIVATE mesh_utils.cpp)
+    target_link_libraries(${_m} PRIVATE Open3D::Open3D ${ARGN})
+    target_compile_definitions(${_m} PRIVATE O3D_ENABLE_DLL_EXPORTS)
+    open3d_show_and_abort_on_warning(${_m})
+    open3d_set_global_properties(${_m})
 
-    target_sources(${EXAMPLE_CPP_NAME} PRIVATE "${EXAMPLE_CPP_NAME}.cpp")
-    target_link_libraries(${EXAMPLE_CPP_NAME} PRIVATE Open3D::Open3D ${ARGN})
-    target_compile_definitions(${EXAMPLE_CPP_NAME} PRIVATE "-DO3D_ENABLE_DLL_EXPORTS")
-    # Don't use open3d_link_3rdparty_libraries(${EXAMPLE_CPP_NAME}).
-    # Unlike benchmarks, examples are intended as standalone apps that link
-    # the main Open3D library, while the benchmarks executable needs 3rd-party
-    # libraries since it measures the internal components of Open3D.
-    open3d_show_and_abort_on_warning(${EXAMPLE_CPP_NAME})
-    open3d_set_global_properties(${EXAMPLE_CPP_NAME})
+    if(WIN32 AND NOT BUILD_SHARED_LIBS)
+        target_link_options(${_m} PRIVATE "/INCREMENTAL:NO" "/force:multiple")
+    endif()
 
-    set_target_properties(${EXAMPLE_CPP_NAME} PROPERTIES
+    set_target_properties(${_m} PROPERTIES
         FOLDER "examples/cpp/"
         RUNTIME_OUTPUT_DIRECTORY "${EXAMPLE_BIN_DIR}"
+        LIBRARY_OUTPUT_DIRECTORY "${EXAMPLE_BIN_DIR}"
+        ARCHIVE_OUTPUT_DIRECTORY "${EXAMPLE_BIN_DIR}"
     )
 
     if (NOT BUILD_EXAMPLES)
-        set_target_properties(${EXAMPLE_CPP_NAME} PROPERTIES
+        set_target_properties(${_m} PROPERTIES
             EXCLUDE_FROM_ALL TRUE
         )
     endif()
 
+    list(APPEND EXAMPLE_TARGETS ${_m})
+
+    # This path is only created after a successful build of target `${_m}`.
+    message(STATUS "mesh_utils output directory: ${EXAMPLE_BIN_DIR}/")
+
+    option(INSTALL_MESH_UTILS_DLL
+           "Install mesh_utils shared library and mesh_utils.hpp" OFF)
+    if(INSTALL_MESH_UTILS_DLL)
+        install(TARGETS ${_m}
+                RUNTIME DESTINATION ${Open3D_INSTALL_BIN_DIR}
+                LIBRARY DESTINATION ${Open3D_INSTALL_LIB_DIR}
+                ARCHIVE DESTINATION ${Open3D_INSTALL_LIB_DIR})
+        install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/mesh_utils.hpp"
+                DESTINATION "${Open3D_INSTALL_INCLUDE_DIR}/mesh_utils")
+    endif()
 endmacro()
 
 open3d_add_example(CameraPoseTrajectory)
@@ -63,7 +83,11 @@ open3d_add_example(FileSystem)
 open3d_add_example(Flann)
 open3d_add_example(Image)
 open3d_add_example(IntegrateRGBD)
-open3d_add_dll(mesh_utils)
+if (TARGET Open3D::3rdparty_openmp)
+    open3d_add_mesh_utils_dll(Open3D::3rdparty_openmp)
+else()
+    open3d_add_mesh_utils_dll()
+endif()
 open3d_add_example(ISSKeypoints)
 open3d_add_example(PlanarPatchDetection   ${OPENMP_TARGET})
 open3d_add_example(LineSet)

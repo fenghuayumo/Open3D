@@ -54,6 +54,10 @@ static const std::unordered_map<std::string, std::string>
                 {"write_ascii",
                  "Set to ``True`` to output in ascii format, otherwise binary "
                  "format will be used."},
+                {"write_vertex_float",
+                 "If ``True``, legacy ``geometry.PointCloud`` PLY output uses "
+                 "float32 for vertex coordinates and normals (when present). "
+                 "Ignored by other formats."},
                 {"write_vertex_normals",
                  "Set to ``False`` to not write any vertex normals, even if "
                  "present on the mesh"},
@@ -207,15 +211,17 @@ void pybind_class_io_definitions(py::module &m_io) {
             "write_point_cloud",
             [](const fs::path &filename, const geometry::PointCloud &pointcloud,
                const std::string &format, bool write_ascii, bool compressed,
-               bool print_progress) {
+               bool print_progress, bool write_vertex_float) {
                 py::gil_scoped_release release;
-                return WritePointCloud(
-                        filename.string(), pointcloud,
-                        {format, write_ascii, compressed, print_progress});
+                WritePointCloudOption opt{format, write_ascii, compressed,
+                                          print_progress};
+                opt.write_vertex_float = write_vertex_float;
+                return WritePointCloud(filename.string(), pointcloud, opt);
             },
             "Function to write PointCloud to file", "filename"_a,
             "pointcloud"_a, "format"_a = "auto", "write_ascii"_a = false,
-            "compressed"_a = false, "print_progress"_a = false);
+            "compressed"_a = false, "print_progress"_a = false,
+            "write_vertex_float"_a = false);
     docstring::FunctionDocInject(m_io, "write_point_cloud",
                                  map_shared_argument_docstrings);
 
@@ -223,13 +229,14 @@ void pybind_class_io_definitions(py::module &m_io) {
             "write_point_cloud_to_bytes",
             [](const geometry::PointCloud &pointcloud,
                const std::string &format, bool write_ascii, bool compressed,
-               bool print_progress) {
+               bool print_progress, bool write_vertex_float) {
                 py::gil_scoped_release release;
                 size_t len = 0;
                 unsigned char *buffer = nullptr;
-                bool wrote = WritePointCloud(
-                        buffer, len, pointcloud,
-                        {format, write_ascii, compressed, print_progress});
+                WritePointCloudOption opt{format, write_ascii, compressed,
+                                          print_progress};
+                opt.write_vertex_float = write_vertex_float;
+                bool wrote = WritePointCloud(buffer, len, pointcloud, opt);
                 py::gil_scoped_acquire acquire;
                 if (!wrote) {
                     return py::bytes();
@@ -241,7 +248,8 @@ void pybind_class_io_definitions(py::module &m_io) {
             },
             "Function to write PointCloud to memory", "pointcloud"_a,
             "format"_a = "auto", "write_ascii"_a = false,
-            "compressed"_a = false, "print_progress"_a = false);
+            "compressed"_a = false, "print_progress"_a = false,
+            "write_vertex_float"_a = false);
     docstring::FunctionDocInject(m_io, "write_point_cloud_to_bytes",
                                  map_shared_argument_docstrings);
 

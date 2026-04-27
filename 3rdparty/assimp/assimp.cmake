@@ -31,6 +31,10 @@ ExternalProject_Add(
         -DASSIMP_INSTALL_PDB=OFF
         -DASSIMP_BUILD_ZLIB=OFF
         -DZLIB_ROOT=${CMAKE_BINARY_DIR}/zlib
+        # Open3D's zlib MSVC patch only installs zlibstatic.lib; pass explicit paths
+        # so Assimp's FIND_PACKAGE(ZLIB) succeeds once zlib is installed.
+        -DZLIB_INCLUDE_DIR=${CMAKE_BINARY_DIR}/zlib/include
+        -DZLIB_LIBRARY=${CMAKE_BINARY_DIR}/zlib/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zlibstatic${CMAKE_STATIC_LIBRARY_SUFFIX}
         -DASSIMP_NO_EXPORT=OFF
         -DHUNTER_ENABLED=OFF # Renamed to "ASSIMP_HUNTER_ENABLED" in newer assimp.
         -DASSIMP_WARNINGS_AS_ERRORS=OFF

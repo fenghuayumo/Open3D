@@ -21,6 +21,9 @@ ExternalProject_Add(
     CMAKE_ARGS
         -DCMAKE_POLICY_VERSION_MINIMUM=3.5
         -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+        # MSVC: do not build zlib.dll alongside zlibstatic; mixing the DLL import
+        # lib with object files causes LNK2005 duplicate symbols (inflate, crc32, ...).
+        -DBUILD_SHARED_LIBS=OFF
         # zlib needs visible symbols for examples. Disabling example building causes
         # assember error in GPU CI. zlib symbols are hidden during linking.
         ${ExternalProject_CMAKE_ARGS}
